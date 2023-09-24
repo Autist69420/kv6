@@ -28,11 +28,45 @@ pub struct VoxelData {
     pub normalindex: u8, // should probably ignore
 }
 
+
 impl Default for KV6Format {
     fn default() -> Self {
         Self { magic: 0x4b76786c, x_size: Default::default(), y_size: Default::default(), z_size: Default::default(), x_pivot: Default::default(), y_pivot: Default::default(), z_pivot: Default::default(), voxels: Default::default(), xlen: Default::default(), ylen: Default::default() }
     }
 }
+
+pub struct KV6FormatBuilder {
+    format: KV6Format
+}
+
+impl KV6FormatBuilder {
+    pub fn new() -> KV6FormatBuilder {
+        Self {
+            format: Default::default(),
+        }
+    }
+
+    pub fn size(mut self, x: u32, y: u32, z: u32) -> KV6FormatBuilder {
+        self.format.x_size = x;
+        self.format.y_size = y;
+        self.format.z_size = z;
+
+        self
+    }
+
+    pub fn pivots(mut self, x: f32, y: f32, z: f32) -> KV6FormatBuilder {
+        self.format.x_pivot = x;
+        self.format.y_pivot = y;
+        self.format.z_pivot = z;
+
+        self
+    }
+
+    pub fn build(self) -> KV6Format {
+        self.format
+    }
+}
+
 
 impl ctx::TryIntoCtx<Endian> for KV6Format {
     type Error = scroll::Error;
