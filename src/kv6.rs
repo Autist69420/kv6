@@ -1,5 +1,5 @@
-use crate::try_gread_vec_with;
-use scroll::{ctx, Endian, Pread, BE, LE};
+use crate::{try_gread_vec_with, try_gwrite_vec_with};
+use scroll::{ctx, Endian, Pread, Pwrite, BE, LE};
 
 #[derive(Debug)]
 pub struct KV6Format {
@@ -16,7 +16,7 @@ pub struct KV6Format {
     pub ylen: Vec<Vec<u16>>, // more cached data for speed in Build engine, length[1] = x_size, length[2] = y_size
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct VoxelData {
     pub red: u8,   // 0..255
     pub green: u8, // 0..255
@@ -26,6 +26,54 @@ pub struct VoxelData {
     pub height: u16,     // little endian,
     pub visibility: u8,  // low 6 bits are hidden surface removal info
     pub normalindex: u8, // should probably ignore
+}
+
+impl Default for KV6Format {
+    fn default() -> Self {
+        Self { magic: 0x4b76786c, x_size: Default::default(), y_size: Default::default(), z_size: Default::default(), x_pivot: Default::default(), y_pivot: Default::default(), z_pivot: Default::default(), voxels: Default::default(), xlen: Default::default(), ylen: Default::default() }
+    }
+}
+
+impl ctx::TryIntoCtx<Endian> for KV6Format {
+    type Error = scroll::Error;
+
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: Endian) -> Result<usize, Self::Error> {
+        let offset = &mut 0;
+        bytes.gwrite_with(self.magic, offset, BE)?;
+        bytes.gwrite_with(self.x_size, offset, ctx)?;
+        bytes.gwrite_with(self.y_size, offset, ctx)?;
+        bytes.gwrite_with(self.z_size, offset, ctx)?;
+
+        bytes.gwrite_with(self.x_pivot, offset, ctx)?;
+        bytes.gwrite_with(self.y_pivot, offset, ctx)?;
+        bytes.gwrite_with(self.z_pivot, offset, ctx)?;
+
+        bytes.gwrite_with(self.voxels.len() as u32, offset, ctx)?;
+        try_gwrite_vec_with!(bytes, offset, self.voxels, ctx);
+
+        try_gwrite_vec_with!(bytes, offset, self.xlen, ctx);
+        // TODO: Writing for Vec<Vec<u16>>
+        // try_gwrite_vec_with!(bytes, offset, self.ylen, ctx);
+
+        Ok(*offset)
+    }
+}
+
+impl ctx::TryIntoCtx<Endian> for VoxelData {
+    type Error = scroll::Error;
+
+    fn try_into_ctx(self, bytes: &mut [u8], ctx: Endian) -> Result<usize, Self::Error> {
+        let offset = &mut 0;
+        bytes.gwrite_with(self.red, offset, ctx)?;
+        bytes.gwrite_with(self.green, offset, ctx)?;
+        bytes.gwrite_with(self.blue, offset, ctx)?;
+        bytes.gwrite_with(self.dummy, offset, ctx)?;
+        bytes.gwrite_with(self.height, offset, LE)?;
+        bytes.gwrite_with(self.visibility, offset, ctx)?;
+        bytes.gwrite_with(self.normalindex, offset, ctx)?;
+
+        Ok(*offset)
+    }
 }
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for KV6Format {

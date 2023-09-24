@@ -15,3 +15,12 @@ macro_rules! try_gread_vec_with {
         vec
     }};
 }
+
+#[macro_export]
+macro_rules! try_gwrite_vec_with {
+    ($dst:ident, $offset:ident, $vec:expr, $ctx:expr) => {
+        for item in $vec {
+            $dst.gwrite_with(item, $offset, $ctx)?;
+        }
+    };
+}
