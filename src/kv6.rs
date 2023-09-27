@@ -16,7 +16,7 @@ pub struct KV6Format {
     pub ylen: Vec<Vec<u16>>, // more cached data for speed in Build engine, length[1] = x_size, length[2] = y_size
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Pwrite)]
 pub struct VoxelData {
     pub red: u8,   // 0..255
     pub green: u8, // 0..255
@@ -67,11 +67,16 @@ impl KV6FormatBuilder {
     }
 }
 
+impl Default for KV6FormatBuilder {
+    fn default() -> KV6FormatBuilder {
+        Self::new()
+    }
+}
 
-impl ctx::TryIntoCtx<Endian> for KV6Format {
+impl ctx::TryIntoCtx<Endian, Vec<u8>> for KV6Format {
     type Error = scroll::Error;
 
-    fn try_into_ctx(self, bytes: &mut [u8], ctx: Endian) -> Result<usize, Self::Error> {
+    fn try_into_ctx(self, bytes: &mut Vec<u8>, ctx: Endian) -> Result<usize, Self::Error> {
         let offset = &mut 0;
         bytes.gwrite_with(self.magic, offset, BE)?;
         bytes.gwrite_with(self.x_size, offset, ctx)?;
@@ -93,22 +98,6 @@ impl ctx::TryIntoCtx<Endian> for KV6Format {
     }
 }
 
-impl ctx::TryIntoCtx<Endian> for VoxelData {
-    type Error = scroll::Error;
-
-    fn try_into_ctx(self, bytes: &mut [u8], ctx: Endian) -> Result<usize, Self::Error> {
-        let offset = &mut 0;
-        bytes.gwrite_with(self.red, offset, ctx)?;
-        bytes.gwrite_with(self.green, offset, ctx)?;
-        bytes.gwrite_with(self.blue, offset, ctx)?;
-        bytes.gwrite_with(self.dummy, offset, ctx)?;
-        bytes.gwrite_with(self.height, offset, LE)?;
-        bytes.gwrite_with(self.visibility, offset, ctx)?;
-        bytes.gwrite_with(self.normalindex, offset, ctx)?;
-
-        Ok(*offset)
-    }
-}
 
 impl<'a> ctx::TryFromCtx<'a, Endian> for KV6Format {
     type Error = scroll::Error;
