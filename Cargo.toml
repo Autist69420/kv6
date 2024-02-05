@@ -1,6 +1,6 @@
 [package]
 name = "kv6"
-version = "0.1.2"
+version = "0.1.3"
 description = "Collection of structs to allow reading of Ken Silverman's voxel formats"
 repository = "https://github.com/Autist69420/kv6"
 license = "MIT"
@@ -10,7 +10,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-scroll = { version = "0.11.0", features = ["derive"] }
+scroll = { version = "0.12.0", features = ["derive"] }
 
 [features]
 default = ["kv6"]
